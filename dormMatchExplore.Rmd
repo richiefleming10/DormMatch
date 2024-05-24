@@ -1,0 +1,57 @@
+---
+title: "DataAnalysisBackend"
+author: "Richie Fleming"
+date: "2024-05-23"
+output: html_document
+---
+
+```{r}
+data = read.csv("C:\\Users\\rflem\\OneDrive\\Desktop\\Projects Summer 24\\AttemptRoom\\Roommate_Matching_Simulated_Data_Updated.csv")
+```
+
+Note: that this data is not indicative of the real data. All data is simulated
+
+```{r}
+head(data)
+keeps <- c("Days.Out", "Bedtime", "Wake.Up.Time", "Cleanliness", "GPA")
+clean_data <- data[keeps]
+head(clean_data)
+```
+Exploring Data:
+Since we don't have a dependent variable, ie. Roommate satisfaction score, we will use GPA as a DV. (Based on the assumption that people with similar GPA will be more compatible)
+
+Test different models using bidirectional approach of feature selection. (Start with limited model)
+
+```{r}
+null_model <- lm(GPA ~ 1, data = clean_data)
+full_model <- lm(GPA ~ ., data =clean_data)
+
+
+fwd_m <- step(null_model, direction = "forward", scope = list(lower = null_model, upper = full_model))
+
+bwd_m <- step(full_model, direction = "backward", k = 2)
+
+
+both_m <- step(null_model, direction = "both", scope = list(lower = null_model, upper = full_model), k = 2)
+```
+```{r}
+aic_values <- c(Forward = AIC(fwd_m), Backward = AIC(bwd_m), Both = AIC(both_m))
+aic_values
+```
+
+```{r}
+summary(fwd_m)
+summary(bwd_m)
+summary(both_m)
+summary(null_model)
+```
+```{r}
+plot(fwd_m)
+```
+Based on the data we collected, we can't accurately predict GPA based on the features we selected. 
+Our R_squared values are significantly below 0.5, meaning we are performing worse than the mean. Also with a p-value of < alpha/2 we can be confident in the significance of this value. 
+- Exclude GPA from our survey questions. 
+
+
+Conclusion: 
+Using a linear model may not be the best approach: Switch to Cosine similarity using a vector of 10 values from survey questions. 
